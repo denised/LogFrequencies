@@ -1,25 +1,18 @@
 import re
 
-strip_digits = str.maketrans("","","0123456789")
-
 def count_pattern(s: str, counts, exemplars):
     """Increment the count for the pattern of s"""
 
-    # Generalize s to pattern ns
-    # Quick and dirty generalization: delete the digits.  This will take care of dates, times, pids, etc.
-    # It won't get month names if they are spelled out.  And of course some log messages may have other differing parts like usernames, etc.
-    ns = s.translate(strip_digits)
+    # Replace strings of digits and month abbreviations with placeholder values
+    s = re.sub(r'\d+', 'x', s.strip())
+    s = re.sub('Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec', 'm', s)
     
     # Count the pattern ns
-    if ns in counts:
-        counts[ns] += 1
+    if s in counts:
+        counts[s] += 1
     else:
-        counts[ns] = 1
-        # also set the exemplar
-        # the exemplar is a string we will show to users.  we still want to remove
-        # digits to help with stability across runs, but we want there to be a placeholder 
-        # for them so the exemplar looks more like the string it is replacing.
-        exemplars[ns] = re.sub(r'\d+','x', s.strip())
+        counts[s] = 1
+        exemplars[s] = s
 
 
 if __name__ == "__main__":
@@ -35,5 +28,5 @@ if __name__ == "__main__":
         count_pattern(line, counts, exemplars)
 
 
-    for k in sorted(counts.keys()):
+    for k in sorted(counts, key=counts.get, reverse=True):
         print(f"{counts[k]:10}: {exemplars[k]}")
